@@ -8,23 +8,26 @@ import { PaperRim, Tent } from './Tent'
 
 const START = new THREE.Vector3(0, 3.6, 20)
 const LOOK_OUT = new THREE.Vector3(0, 4.5, 0)
-const LOOK_IN = new THREE.Vector3(0, 1.9, 0) // orbit target: table centre
+const LOOK_IN = new THREE.Vector3(0, 1.7, 0) // orbit target: table centre
 const ENTRY = new THREE.CatmullRomCurve3([
   START,
   new THREE.Vector3(0, 2.6, 10),
   new THREE.Vector3(0, 1.9, 5.5),
-  new THREE.Vector3(0, 1.75, 1.3), // seat at the table edge; orbit radius = this distance to LOOK_IN
+  new THREE.Vector3(0, 1.9, 1.5), // seat at the table edge; orbit radius = this distance to LOOK_IN
 ])
-const SEAT_R = 2.6
+const SEAT_R = 1.9
 // cut = fraction of the painting kept above its own painted table
 const CATS = [
-  { src: import.meta.env.BASE_URL + 'cats/wizard.jpg', angle: Math.PI, cut: 0.6 },
-  { src: import.meta.env.BASE_URL + 'cats/vampire.jpg', angle: Math.PI / 3, cut: 0.72 },
+  { src: import.meta.env.BASE_URL + 'cats/wizard.jpg', angle: Math.PI / 3, cut: 0.6, keepW: 0.76 },
+  { src: import.meta.env.BASE_URL + 'cats/vampire.jpg', angle: Math.PI, cut: 0.72 },
   { src: import.meta.env.BASE_URL + 'cats/queen.jpg', angle: -Math.PI / 3, cut: 0.77 },
 ]
 const TABLE_TOP = 1.15
-const GLOBE_ANGLE = (Math.PI * 2) / 3
-const WAND_ANGLE = -GLOBE_ANGLE // the other gap between seats
+const TABLE_R = 1.1
+// globe beside the birthday-hat cat, on the viewer's right, as in its painting
+const GLOBE_ANGLE = CATS[0].angle - 0.45
+// as in the vampire's painting: lying across the table in front of him, right of centre, silver tip pointing left
+const WAND_POS = [Math.sin(CATS[1].angle) * 0.5 + 0.4, TABLE_TOP + 0.035, Math.cos(CATS[1].angle) * 0.5]
 // Tweened by GSAP, read every frame by the curtains and the camera.
 const anim = { curtain: 0, walk: 0 }
 
@@ -51,27 +54,27 @@ function useTextures() {
 function Table({ tex }) {
   const fans = useMemo(() => CATS.flatMap((c, ci) => [-2, -1, 0, 1, 2].map((k) => {
     const a = c.angle + k * 0.16
-    return { a, tex: tex.cards[(ci * 5 + k + 2) % tex.cards.length], pos: [Math.sin(a) * 1.15, TABLE_TOP + 0.01 + k * 0.002, Math.cos(a) * 1.15] }
+    return { a, tex: tex.cards[(ci * 5 + k + 2) % tex.cards.length], pos: [Math.sin(a) * (TABLE_R - 0.3), TABLE_TOP + 0.01 + k * 0.002, Math.cos(a) * (TABLE_R - 0.3)] }
   })), [tex])
   return (
     <group>
       <mesh position={[0, TABLE_TOP / 2, 0]}>
-        <cylinderGeometry args={[1.6, 1.8, TABLE_TOP, 64, 1]} />
+        <cylinderGeometry args={[TABLE_R, TABLE_R + 0.15, TABLE_TOP, 64, 1]} />
         <meshLambertMaterial map={tex.cloth} />
         <PaperRim s={0.7} />
       </mesh>
       <mesh position={[0, TABLE_TOP + 0.001, 0]} rotation-x={-Math.PI / 2}>
-        <circleGeometry args={[1.6, 64]} />
+        <circleGeometry args={[TABLE_R, 64]} />
         <meshLambertMaterial map={tex.clothTop} />
       </mesh>
       {fans.map((f, i) => (
         <mesh key={i} position={f.pos} rotation={[-Math.PI / 2, 0, f.a]}>
-          <planeGeometry args={[0.28, 0.44]} />
+          <planeGeometry args={[0.22, 0.34]} />
           <meshLambertMaterial map={f.tex} />
         </mesh>
       ))}
       {/* globe sits in the gap between two seats: it drops out of frame when you face the cat across from it */}
-      <group position={[Math.sin(GLOBE_ANGLE) * 0.9, 0, Math.cos(GLOBE_ANGLE) * 0.9]}>
+      <group position={[Math.sin(GLOBE_ANGLE) * 0.8, 0, Math.cos(GLOBE_ANGLE) * 0.8]}>
         <mesh position={[0, TABLE_TOP + 0.06, 0]}>
           <cylinderGeometry args={[0.13, 0.19, 0.12, 24]} />
           <meshLambertMaterial map={tex.brass} />
@@ -84,7 +87,7 @@ function Table({ tex }) {
         </mesh>
       </group>
       {/* the black wand with a silver tip from the paintings, lying across the gap */}
-      <group position={[Math.sin(WAND_ANGLE) * 0.95, TABLE_TOP + 0.035, Math.cos(WAND_ANGLE) * 0.95]} rotation-y={WAND_ANGLE + 0.3 + Math.PI}>
+      <group position={WAND_POS} rotation-y={CATS[1].angle}>
         <mesh rotation-z={Math.PI / 2}>
           <cylinderGeometry args={[0.03, 0.03, 0.8, 16]} />
           <meshLambertMaterial map={tex.wand} />
@@ -100,9 +103,9 @@ function Table({ tex }) {
   )
 }
 
-function Cat({ src, angle, cut }) {
+function Cat({ src, angle, cut, keepW }) {
   const img = useLoader(THREE.ImageLoader, src)
-  const c = useMemo(() => cutout(img, cut, 3.9), [img, cut])
+  const c = useMemo(() => cutout(img, cut, 3.0, keepW), [img, cut, keepW])
   return (
     <group position={[Math.sin(angle) * SEAT_R, 0.75, Math.cos(angle) * SEAT_R]} rotation-y={angle + Math.PI}>
       <mesh geometry={c.geo} position-y={c.h / 2}>

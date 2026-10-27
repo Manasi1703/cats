@@ -87,7 +87,8 @@ const isBackground = (R, G, B) =>
 
 // Cuts the cat out of its painting: flood-fills background from the borders (so red noses and
 // pink ears inside the cat survive), then bulges the cutout like a stuffed paper relief.
-export function cutout(img, cut, height, relief = 0.45) {
+// keepW drops everything right of that fraction of the width (a prop painted beside the cat).
+export function cutout(img, cut, height, keepW = 1, relief = 0.45) {
   const W = img.width, H = Math.round(img.height * cut)
   const full = document.createElement('canvas')
   full.width = W
@@ -120,6 +121,7 @@ export function cutout(img, cut, height, relief = 0.45) {
     if (y > 0) seed(x, y - 1)
     if (y < rows - 1) seed(x, y + 1)
   }
+  for (let i = 0; i < fg.length; i++) if (i % cols >= keepW * cols) fg[i] = 0
 
   // Erode first so thin painted cords touching the cat drop out, then soften:
   // alphaTest 0.5 = cut line, lower threshold = paper border around it.
