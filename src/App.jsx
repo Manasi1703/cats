@@ -18,8 +18,8 @@ const ENTRY = new THREE.CatmullRomCurve3([
 const SEAT_R = 2.6
 // cut = fraction of the painting kept above its own painted table
 const CATS = [
-  { src: import.meta.env.BASE_URL + 'cats/wizard.jpg', angle: Math.PI, cut: 0.6 },
-  { src: import.meta.env.BASE_URL + 'cats/vampire.jpg', angle: Math.PI / 3, cut: 0.72 },
+  { src: import.meta.env.BASE_URL + 'cats/wizard.jpg', angle: Math.PI / 3, cut: 0.6 },
+  { src: import.meta.env.BASE_URL + 'cats/vampire.jpg', angle: Math.PI, cut: 0.72 },
   { src: import.meta.env.BASE_URL + 'cats/queen.jpg', angle: -Math.PI / 3, cut: 0.77 },
 ]
 const TABLE_TOP = 1.15
